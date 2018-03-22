@@ -30,9 +30,61 @@ impl Default for State {
     }
 }
 
+#[derive(PartialEq, Clone, Debug)]
+enum Instruction {
+    Increase,
+    Decrease,
+    MoveLeft,
+    MoveRight,
+    LoopBegin(Option<usize>),
+    LoopEnd(Option<usize>),
+    Input,
+    Output,
+    Comment,
+}
+
+fn parse(prog: &str) -> Vec<Instruction> {
+    let mut p: Vec<Instruction> = prog.chars()
+        .map(|x| match x {
+            '+' => Instruction::Increase,
+            '-' => Instruction::Decrease,
+            '<' => Instruction::MoveLeft,
+            '>' => Instruction::MoveRight,
+            ',' => Instruction::Input,
+            '.' => Instruction::Output,
+            '[' => Instruction::LoopBegin(None),
+            ']' => Instruction::LoopEnd(None),
+            _ => Instruction::Comment,
+        })
+        .filter(|x| *x != Instruction::Comment)
+        .collect();
+    let p2 = p.clone();
+    let loops = p2.iter().enumerate().filter(|&(_, x)| match x {
+        &Instruction::LoopBegin(_) => true,
+        &Instruction::LoopEnd(_) => true,
+        _ => false,
+    });
+    let mut stack = vec![];
+    for (idx, instr) in loops {
+        match instr {
+            &Instruction::LoopBegin(_) => stack.push(idx),
+            &Instruction::LoopEnd(_) => {
+                let tmp = stack.pop().unwrap();
+                p[tmp] = Instruction::LoopBegin(Some(idx));
+                p[idx] = Instruction::LoopEnd(Some(tmp));
+            }
+            _ => unreachable!(),
+        }
+    }
+    println!("{:?}", p);
+    p
+}
+
 fn main() {
     // Hello World
     let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
+    let prog2 = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+    let bla = parse(prog2);
     // let prog = "++[->+<]".as_bytes();
     // The buffer
     let mut tape: VecDeque<Wrapping<u8>> = VecDeque::new();
