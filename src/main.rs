@@ -31,7 +31,7 @@ impl Default for State {
 }
 
 #[derive(PartialEq, Clone, Debug)]
-enum Instruction {
+enum Token {
     Increase,
     Decrease,
     MoveLeft,
@@ -43,35 +43,35 @@ enum Instruction {
     Comment,
 }
 
-fn parse(prog: &str) -> Vec<Instruction> {
-    let mut p: Vec<Instruction> = prog.chars()
+fn parse(prog: &str) -> Vec<Token> {
+    let mut p: Vec<Token> = prog.chars()
         .map(|x| match x {
-            '+' => Instruction::Increase,
-            '-' => Instruction::Decrease,
-            '<' => Instruction::MoveLeft,
-            '>' => Instruction::MoveRight,
-            ',' => Instruction::Input,
-            '.' => Instruction::Output,
-            '[' => Instruction::LoopBegin(None),
-            ']' => Instruction::LoopEnd(None),
-            _ => Instruction::Comment,
+            '+' => Token::Increase,
+            '-' => Token::Decrease,
+            '<' => Token::MoveLeft,
+            '>' => Token::MoveRight,
+            ',' => Token::Input,
+            '.' => Token::Output,
+            '[' => Token::LoopBegin(None),
+            ']' => Token::LoopEnd(None),
+            _ => Token::Comment,
         })
-        .filter(|x| *x != Instruction::Comment)
+        .filter(|x| *x != Token::Comment)
         .collect();
     let p2 = p.clone();
     let loops = p2.iter().enumerate().filter(|&(_, x)| match x {
-        &Instruction::LoopBegin(_) => true,
-        &Instruction::LoopEnd(_) => true,
+        &Token::LoopBegin(_) => true,
+        &Token::LoopEnd(_) => true,
         _ => false,
     });
     let mut stack = vec![];
     for (idx, instr) in loops {
         match instr {
-            &Instruction::LoopBegin(_) => stack.push(idx),
-            &Instruction::LoopEnd(_) => {
+            &Token::LoopBegin(_) => stack.push(idx),
+            &Token::LoopEnd(_) => {
                 let tmp = stack.pop().unwrap();
-                p[tmp] = Instruction::LoopBegin(Some(idx));
-                p[idx] = Instruction::LoopEnd(Some(tmp));
+                p[tmp] = Token::LoopBegin(Some(idx));
+                p[idx] = Token::LoopEnd(Some(tmp));
             }
             _ => unreachable!(),
         }
