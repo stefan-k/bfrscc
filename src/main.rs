@@ -43,6 +43,22 @@ enum Token {
     Comment,
 }
 
+struct Instruction {
+    position: usize,
+    token: Token,
+    multiplier: usize,
+}
+
+impl Instruction {
+    pub fn new(position: usize, token: Token, multiplier: usize) -> Self {
+        Instruction {
+            position,
+            token,
+            multiplier,
+        }
+    }
+}
+
 fn parse(prog: &str) -> Vec<Token> {
     let mut p: Vec<Token> = prog.chars()
         .map(|x| match x {
