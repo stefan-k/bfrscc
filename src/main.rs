@@ -59,6 +59,22 @@ impl Instruction {
     }
 }
 
+fn lexer(prog: &str) -> Vec<Token> {
+    prog.chars()
+        .map(|x| match x {
+            '+' => Token::Increase,
+            '-' => Token::Decrease,
+            '<' => Token::MoveLeft,
+            '>' => Token::MoveRight,
+            ',' => Token::Input,
+            '.' => Token::Output,
+            '[' => Token::LoopBegin(None),
+            ']' => Token::LoopEnd(None),
+            _ => Token::Comment,
+        })
+        .collect()
+}
+
 fn parse(prog: &str) -> Vec<Token> {
     let mut p: Vec<Token> = prog.chars()
         .map(|x| match x {
@@ -100,6 +116,8 @@ fn main() {
     // Hello World
     let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
     let prog2 = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+    let bla = lexer(prog2);
+    println!("{:?}", bla);
     let bla = parse(prog2);
     // let prog = "++[->+<]".as_bytes();
     // The buffer
