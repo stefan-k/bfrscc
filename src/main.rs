@@ -84,35 +84,24 @@ fn lexer(prog: &str) -> TokenStream {
         .collect()
 }
 
-fn parse(prog: &str) -> Vec<Token> {
-    let mut p: Vec<Token> = prog.chars()
-        .map(|x| match x {
-            '+' => Token::Increase,
-            '-' => Token::Decrease,
-            '<' => Token::MoveLeft,
-            '>' => Token::MoveRight,
-            ',' => Token::Input,
-            '.' => Token::Output,
-            '[' => Token::LoopBegin(None),
-            ']' => Token::LoopEnd(None),
-            _ => Token::Comment,
-        })
-        .filter(|x| *x != Token::Comment)
+fn parse(prog: TokenStream) -> TokenStream {
+    let mut p: TokenStream = prog.into_iter()
+        .filter(|&(_, ref x)| *x != Token::Comment)
         .collect();
     let p2 = p.clone();
-    let loops = p2.iter().enumerate().filter(|&(_, x)| match x {
-        &Token::LoopBegin(_) => true,
-        &Token::LoopEnd(_) => true,
+    let loops = p2.into_iter().filter(|&(_, ref x)| match *x {
+        Token::LoopBegin(_) => true,
+        Token::LoopEnd(_) => true,
         _ => false,
     });
     let mut stack = vec![];
     for (idx, instr) in loops {
         match instr {
-            &Token::LoopBegin(_) => stack.push(idx),
-            &Token::LoopEnd(_) => {
+            Token::LoopBegin(_) => stack.push(idx),
+            Token::LoopEnd(_) => {
                 let tmp = stack.pop().unwrap();
-                p[tmp] = Token::LoopBegin(Some(idx));
-                p[idx] = Token::LoopEnd(Some(tmp));
+                p[tmp] = (tmp, Token::LoopBegin(Some(idx)));
+                p[idx] = (idx, Token::LoopEnd(Some(tmp)));
             }
             _ => unreachable!(),
         }
@@ -127,7 +116,8 @@ fn main() {
     let prog2 = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
     let bla = lexer(prog2);
     println!("{:?}", bla);
-    let bla = parse(prog2);
+    let bla = parse(bla);
+    println!("{:?}", bla);
     // let prog = "++[->+<]".as_bytes();
     // The buffer
     let mut tape: VecDeque<Wrapping<u8>> = VecDeque::new();
