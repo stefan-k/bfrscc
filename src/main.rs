@@ -64,6 +64,15 @@ type TokenPosition = usize;
 type TokenStream = Vec<(TokenPosition, Token)>;
 type InstructionStream = Vec<Instruction>;
 
+fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
+    for (idx, elem) in stream.iter().enumerate() {
+        if elem.position == position {
+            return Some(idx);
+        }
+    }
+    None
+}
+
 fn lexer(prog: &str) -> TokenStream {
     prog.chars()
         .enumerate()
@@ -119,30 +128,31 @@ fn parser(prog: TokenStream) -> InstructionStream {
 
 fn main() {
     // Hello World
-    let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
-    let prog2 = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+    // let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
+    let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
     // let prog = "++[->+<]".as_bytes();
-    let bla = lexer(prog2);
+    let prog_lex = lexer(prog);
     // println!("{:?}", bla);
-    let bla = parser(bla);
-    println!("{:?}", bla);
+    let prog = parser(prog_lex);
+    println!("{:?}", prog);
+
     // The buffer
     let mut tape: VecDeque<Wrapping<u8>> = VecDeque::new();
+
     // Start with a single `0` in the tape. `Wrapping` is needed because we want to allow for
     // overflows.
     tape.push_back(Wrapping(0));
     // State holds the position of the pointer
     let mut state = State::new();
-    // a stack needed for matching `[` and `]`
-    let mut ls: Vec<usize> = vec![];
+
     // length of the program.
     let plen = prog.len();
     let mut idx = 0;
     loop {
         // Get the current instruction.
-        match *prog.get(idx).unwrap() as char {
+        match prog.get(idx).unwrap().token {
             // Move right
-            '>' => {
+            Token::MoveRight => {
                 state.pos += 1;
                 match tape.get(state.pos) {
                     // The tape is not empty at the current position.
@@ -152,7 +162,7 @@ fn main() {
                 };
             }
             // Move left
-            '<' => match state.pos {
+            Token::MoveLeft => match state.pos {
                 // We are already at the beginning of the tape, so we will just push to the
                 // front. Decreasing `state.pos` is not necessary.
                 0 => {
@@ -162,63 +172,47 @@ fn main() {
                 _ => state.pos -= 1,
             },
             // Increase the value at the current tape position. Allow for buffer overflows!
-            '+' => {
+            Token::Increase => {
                 if let Some(elem) = tape.get_mut(state.pos) {
                     *elem += Wrapping(1);
                 }
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
-            '-' => {
+            Token::Decrease => {
                 if let Some(elem) = tape.get_mut(state.pos) {
                     *elem -= Wrapping(1);
                 }
             }
             // Print the `char` at the current tape position.
-            '.' => print!("{}", tape.get(state.pos).unwrap().0 as char),
+            Token::Output => print!("{}", tape.get(state.pos).unwrap().0 as char),
             // We found a `[` which indicates the start of a loop
-            '[' => match tape.get(state.pos) {
+            Token::LoopBegin(Some(lb)) => match tape.get(state.pos) {
                 // Value at current tape is `0`, therefore we jump to the position after the
                 // matching `]`.
                 Some(&Wrapping(0)) => {
-                    // Keep track of all the other matching `[` and `]` that we encounter along the
-                    // way.
-                    let mut lec: usize = 0;
-                    // Move forward in the program.
-                    loop {
-                        idx += 1;
-                        match *prog.get(idx).unwrap() as char {
-                            // We have found another `[`
-                            '[' => lec += 1,
-                            // We have found another `]` which does not match the one we are
-                            // acually looking for.
-                            ']' if lec > 0 => lec -= 1,
-                            // We have found the matching `]`
-                            ']' if lec == 0 => break,
-                            // Ignore anything else
-                            _ => {}
-                        };
+                    if let Some(x) = get_instruction_idx(&prog, lb) {
+                        idx = x;
+                    } else {
+                        panic!("bla");
                     }
                 }
-                // The value in the tape is nonzero, therefore we just push the position of `[`
-                // to the ls stack and move on.
-                _ => {
-                    ls.push(idx);
-                }
+                // The value in the tape is nonzero, do nothing
+                _ => {}
             },
             // We found a `]` which indicates the end of a loop
-            ']' => {
+            Token::LoopEnd(Some(le)) => {
                 match tape.get(state.pos) {
                     // If the value in the tape at the current position is nonzero, we move to
-                    // the matching `[` which we have kept track of in the `ls` stack.
+                    // the matching `[`.
                     Some(c) if (*c).0 != 0 => {
-                        idx = *ls.get(ls.len() - 1).unwrap();
+                        if let Some(x) = get_instruction_idx(&prog, le) {
+                            idx = x;
+                        } else {
+                            panic!("bla");
+                        }
                     }
-                    // The value at the current position of the tape is zero, therefore we pop
-                    // the matching `[` off the `ls` stack and move on.
-                    _ => {
-                        ls.pop();
-                        ()
-                    }
+                    // The value at the current position of the tape is zero, therefore we move on
+                    _ => (),
                 };
             }
             // Match any other character
