@@ -43,6 +43,7 @@ enum Token {
     Comment,
 }
 
+#[derive(Debug, Clone)]
 struct Instruction {
     position: usize,
     token: Token,
@@ -61,6 +62,7 @@ impl Instruction {
 
 type TokenPosition = usize;
 type TokenStream = Vec<(TokenPosition, Token)>;
+type InstructionStream = Vec<Instruction>;
 
 fn lexer(prog: &str) -> TokenStream {
     prog.chars()
@@ -84,10 +86,13 @@ fn lexer(prog: &str) -> TokenStream {
         .collect()
 }
 
-fn parse(prog: TokenStream) -> TokenStream {
+fn parser(prog: TokenStream) -> InstructionStream {
+    // get rid of everything that is not an instruction
     let mut p: TokenStream = prog.into_iter()
         .filter(|&(_, ref x)| *x != Token::Comment)
         .collect();
+
+    // Deal with the loops
     let p2 = p.clone();
     let loops = p2.into_iter().filter(|&(_, ref x)| match *x {
         Token::LoopBegin(_) => true,
@@ -106,19 +111,21 @@ fn parse(prog: TokenStream) -> TokenStream {
             _ => unreachable!(),
         }
     }
-    println!("{:?}", p);
-    p
+    // map to instructions
+    p.into_iter()
+        .map(|(i, x)| Instruction::new(i, x, 1))
+        .collect()
 }
 
 fn main() {
     // Hello World
     let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
     let prog2 = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
-    let bla = lexer(prog2);
-    println!("{:?}", bla);
-    let bla = parse(bla);
-    println!("{:?}", bla);
     // let prog = "++[->+<]".as_bytes();
+    let bla = lexer(prog2);
+    // println!("{:?}", bla);
+    let bla = parser(bla);
+    println!("{:?}", bla);
     // The buffer
     let mut tape: VecDeque<Wrapping<u8>> = VecDeque::new();
     // Start with a single `0` in the tape. `Wrapping` is needed because we want to allow for
