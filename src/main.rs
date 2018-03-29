@@ -54,6 +54,20 @@ impl State {
         };
         self
     }
+
+    pub fn increase(&mut self, val: u8) -> &mut Self {
+        if let Some(elem) = self.tape.get_mut(self.pos) {
+            *elem += Wrapping(val);
+        };
+        self
+    }
+
+    pub fn decrease(&mut self, val: u8) -> &mut Self {
+        if let Some(elem) = self.tape.get_mut(self.pos) {
+            *elem -= Wrapping(val);
+        };
+        self
+    }
 }
 
 impl Default for State {
@@ -188,15 +202,13 @@ fn main() {
             }
             // Increase the value at the current tape position. Allow for buffer overflows!
             Token::Increase => {
-                if let Some(elem) = state.tape.get_mut(state.pos) {
-                    *elem += Wrapping(1);
-                }
+                state.increase(1);
+                ()
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
             Token::Decrease => {
-                if let Some(elem) = state.tape.get_mut(state.pos) {
-                    *elem -= Wrapping(1);
-                }
+                state.decrease(1);
+                ()
             }
             // Print the `char` at the current tape position.
             Token::Output => print!("{}", state.tape.get(state.pos).unwrap().0 as char),
