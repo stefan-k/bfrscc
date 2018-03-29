@@ -10,16 +10,25 @@
 use std::collections::VecDeque;
 use std::num::Wrapping;
 
+type TokenPosition = usize;
+type TokenStream = Vec<(TokenPosition, Token)>;
+type InstructionStream = Vec<Instruction>;
+type Tape = VecDeque<Wrapping<u8>>;
+
 /// Holds the state of the interpreter
 struct State {
     /// Current position in the buffer
     pos: usize,
+    /// Tape
+    tape: Tape,
 }
 
 impl State {
     /// Constructor
     pub fn new() -> Self {
-        State { pos: 0 }
+        let mut tape = VecDeque::new();
+        tape.push_back(Wrapping(0));
+        State { pos: 0, tape }
     }
 }
 
@@ -59,10 +68,6 @@ impl Instruction {
         }
     }
 }
-
-type TokenPosition = usize;
-type TokenStream = Vec<(TokenPosition, Token)>;
-type InstructionStream = Vec<Instruction>;
 
 fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
     for (idx, elem) in stream.iter().enumerate() {
@@ -137,11 +142,7 @@ fn main() {
     println!("{:?}", prog);
 
     // The buffer
-    let mut tape: VecDeque<Wrapping<u8>> = VecDeque::new();
 
-    // Start with a single `0` in the tape. `Wrapping` is needed because we want to allow for
-    // overflows.
-    tape.push_back(Wrapping(0));
     // State holds the position of the pointer
     let mut state = State::new();
 
@@ -154,11 +155,11 @@ fn main() {
             // Move right
             Token::MoveRight => {
                 state.pos += 1;
-                match tape.get(state.pos) {
+                match state.tape.get(state.pos) {
                     // The tape is not empty at the current position.
                     Some(_) => {}
                     // We have exceeded the tape and need to add another element
-                    None => tape.push_back(Wrapping(0)),
+                    None => state.tape.push_back(Wrapping(0)),
                 };
             }
             // Move left
@@ -166,27 +167,27 @@ fn main() {
                 // We are already at the beginning of the tape, so we will just push to the
                 // front. Decreasing `state.pos` is not necessary.
                 0 => {
-                    tape.push_front(Wrapping(0));
+                    state.tape.push_front(Wrapping(0));
                 }
                 // Just move the pointer to the left
                 _ => state.pos -= 1,
             },
             // Increase the value at the current tape position. Allow for buffer overflows!
             Token::Increase => {
-                if let Some(elem) = tape.get_mut(state.pos) {
+                if let Some(elem) = state.tape.get_mut(state.pos) {
                     *elem += Wrapping(1);
                 }
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
             Token::Decrease => {
-                if let Some(elem) = tape.get_mut(state.pos) {
+                if let Some(elem) = state.tape.get_mut(state.pos) {
                     *elem -= Wrapping(1);
                 }
             }
             // Print the `char` at the current tape position.
-            Token::Output => print!("{}", tape.get(state.pos).unwrap().0 as char),
+            Token::Output => print!("{}", state.tape.get(state.pos).unwrap().0 as char),
             // We found a `[` which indicates the start of a loop
-            Token::LoopBegin(Some(lb)) => match tape.get(state.pos) {
+            Token::LoopBegin(Some(lb)) => match state.tape.get(state.pos) {
                 // Value at current tape is `0`, therefore we jump to the position after the
                 // matching `]`.
                 Some(&Wrapping(0)) => {
@@ -201,7 +202,7 @@ fn main() {
             },
             // We found a `]` which indicates the end of a loop
             Token::LoopEnd(Some(le)) => {
-                match tape.get(state.pos) {
+                match state.tape.get(state.pos) {
                     // If the value in the tape at the current position is nonzero, we move to
                     // the matching `[`.
                     Some(c) if (*c).0 != 0 => {
@@ -225,5 +226,5 @@ fn main() {
         }
     }
     // Print the final tape
-    println!("Tape: {:?}", tape);
+    println!("Tape: {:?}", state.tape);
 }
