@@ -8,24 +8,11 @@
 //! A basic, certainly not optimized, Brainfuck interpreter.
 
 mod state;
+mod lexer;
 use state::State;
+use lexer::{lexer, Token, TokenStream};
 
-type TokenPosition = usize;
-type TokenStream = Vec<(TokenPosition, Token)>;
 type InstructionStream = Vec<Instruction>;
-
-#[derive(PartialEq, Clone, Debug)]
-enum Token {
-    Increase,
-    Decrease,
-    MoveLeft,
-    MoveRight,
-    LoopBegin(Option<usize>),
-    LoopEnd(Option<usize>),
-    Input,
-    Output,
-    Comment,
-}
 
 #[derive(Debug, Clone)]
 struct Instruction {
@@ -51,28 +38,6 @@ fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<us
         }
     }
     None
-}
-
-fn lexer(prog: &str) -> TokenStream {
-    prog.chars()
-        .enumerate()
-        .map(|(i, x)| {
-            (
-                i,
-                match x {
-                    '+' => Token::Increase,
-                    '-' => Token::Decrease,
-                    '<' => Token::MoveLeft,
-                    '>' => Token::MoveRight,
-                    ',' => Token::Input,
-                    '.' => Token::Output,
-                    '[' => Token::LoopBegin(None),
-                    ']' => Token::LoopEnd(None),
-                    _ => Token::Comment,
-                },
-            )
-        })
-        .collect()
 }
 
 fn parser(prog: TokenStream) -> InstructionStream {
