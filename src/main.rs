@@ -30,6 +30,30 @@ impl State {
         tape.push_back(Wrapping(0));
         State { pos: 0, tape }
     }
+
+    pub fn left(&mut self) -> &mut Self {
+        match self.pos {
+            // We are already at the beginning of the tape, so we will just push to the
+            // front. Decreasing `state.pos` is not necessary.
+            0 => {
+                self.tape.push_front(Wrapping(0));
+            }
+            // Just move the pointer to the left
+            _ => self.pos -= 1,
+        };
+        self
+    }
+
+    pub fn right(&mut self) -> &mut Self {
+        self.pos += 1;
+        match self.tape.get(self.pos) {
+            // The tape is not empty at the current position.
+            Some(_) => {}
+            // We have exceeded the tape and need to add another element
+            None => self.tape.push_back(Wrapping(0)),
+        };
+        self
+    }
 }
 
 impl Default for State {
@@ -154,24 +178,14 @@ fn main() {
         match prog.get(idx).unwrap().token {
             // Move right
             Token::MoveRight => {
-                state.pos += 1;
-                match state.tape.get(state.pos) {
-                    // The tape is not empty at the current position.
-                    Some(_) => {}
-                    // We have exceeded the tape and need to add another element
-                    None => state.tape.push_back(Wrapping(0)),
-                };
+                state.right();
+                ()
             }
             // Move left
-            Token::MoveLeft => match state.pos {
-                // We are already at the beginning of the tape, so we will just push to the
-                // front. Decreasing `state.pos` is not necessary.
-                0 => {
-                    state.tape.push_front(Wrapping(0));
-                }
-                // Just move the pointer to the left
-                _ => state.pos -= 1,
-            },
+            Token::MoveLeft => {
+                state.left();
+                ()
+            }
             // Increase the value at the current tape position. Allow for buffer overflows!
             Token::Increase => {
                 if let Some(elem) = state.tape.get_mut(state.pos) {
