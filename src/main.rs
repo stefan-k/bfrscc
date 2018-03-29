@@ -70,6 +70,10 @@ impl State {
         };
         self
     }
+
+    pub fn get_val(&self) -> u8 {
+        self.tape.get(self.pos).unwrap().0
+    }
 }
 
 impl Default for State {
@@ -199,7 +203,6 @@ fn main() {
                 ..
             } => {
                 state.right(m);
-                ()
             }
             // Move left
             &Instruction {
@@ -208,7 +211,6 @@ fn main() {
                 ..
             } => {
                 state.left(m);
-                ()
             }
             // Increase the value at the current tape position. Allow for buffer overflows!
             &Instruction {
@@ -217,7 +219,6 @@ fn main() {
                 ..
             } => {
                 state.increase(m);
-                ()
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
             &Instruction {
@@ -226,50 +227,43 @@ fn main() {
                 ..
             } => {
                 state.decrease(m);
-                ()
             }
             // Print the `char` at the current tape position.
             &Instruction {
                 token: Token::Output,
                 ..
-            } => print!("{}", state.tape.get(state.pos).unwrap().0 as char),
+            } => print!("{}", state.get_val() as char),
             // We found a `[` which indicates the start of a loop
             &Instruction {
                 token: Token::LoopBegin(Some(lb)),
                 ..
-            } => match state.tape.get(state.pos) {
-                // Value at current tape is `0`, therefore we jump to the position after the
-                // matching `]`.
-                Some(&Wrapping(0)) => {
+            } => {
+                if state.get_val() == 0 {
+                    // Value at current tape is `0`, therefore we jump to the position after the
+                    // matching `]`. Otherwise do nothing (means moving on).
                     if let Some(x) = get_instruction_idx(&prog, lb) {
                         idx = x;
                     } else {
-                        panic!("bla");
+                        panic!("No matching ] found. This cannot happen.");
                     }
                 }
-                // The value in the tape is nonzero, do nothing
-                _ => {}
-            },
+            }
             // We found a `]` which indicates the end of a loop
             &Instruction {
                 token: Token::LoopEnd(Some(le)),
                 ..
             } => {
-                match state.tape.get(state.pos) {
+                if state.get_val() != 0 {
                     // If the value in the tape at the current position is nonzero, we move to
-                    // the matching `[`.
-                    Some(c) if (*c).0 != 0 => {
-                        if let Some(x) = get_instruction_idx(&prog, le) {
-                            idx = x;
-                        } else {
-                            panic!("bla");
-                        }
+                    // the matching `[`. Otherwise do nothing (means moving on).
+                    if let Some(x) = get_instruction_idx(&prog, le) {
+                        idx = x;
+                    } else {
+                        panic!("No matching [ found. This cannot happen.");
                     }
-                    // The value at the current position of the tape is zero, therefore we move on
-                    _ => (),
-                };
+                }
             }
-            // Match any other character
+            // Match any other Token...
             _ => {}
         };
         // Move to the next instruction, break if end of program is reached.
