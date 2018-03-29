@@ -31,27 +31,29 @@ impl State {
         State { pos: 0, tape }
     }
 
-    pub fn left(&mut self) -> &mut Self {
+    pub fn left(&mut self, val: u8) -> &mut Self {
         match self.pos {
             // We are already at the beginning of the tape, so we will just push to the
             // front. Decreasing `state.pos` is not necessary.
-            0 => {
+            0 => for _ in 0..val {
                 self.tape.push_front(Wrapping(0));
-            }
+            },
             // Just move the pointer to the left
-            _ => self.pos -= 1,
+            _ => self.pos -= val as usize,
         };
         self
     }
 
-    pub fn right(&mut self) -> &mut Self {
-        self.pos += 1;
-        match self.tape.get(self.pos) {
-            // The tape is not empty at the current position.
-            Some(_) => {}
-            // We have exceeded the tape and need to add another element
-            None => self.tape.push_back(Wrapping(0)),
-        };
+    pub fn right(&mut self, val: u8) -> &mut Self {
+        for _ in 0..val {
+            self.pos += 1;
+            match self.tape.get(self.pos) {
+                // The tape is not empty at the current position.
+                Some(_) => {}
+                // We have exceeded the tape and need to add another element
+                None => self.tape.push_back(Wrapping(0)),
+            };
+        }
         self
     }
 
@@ -94,11 +96,11 @@ enum Token {
 struct Instruction {
     position: usize,
     token: Token,
-    multiplier: usize,
+    multiplier: u8,
 }
 
 impl Instruction {
-    pub fn new(position: usize, token: Token, multiplier: usize) -> Self {
+    pub fn new(position: usize, token: Token, multiplier: u8) -> Self {
         Instruction {
             position,
             token,
@@ -189,31 +191,53 @@ fn main() {
     let mut idx = 0;
     loop {
         // Get the current instruction.
-        match prog.get(idx).unwrap().token {
+        match prog.get(idx).unwrap() {
             // Move right
-            Token::MoveRight => {
-                state.right();
+            &Instruction {
+                token: Token::MoveRight,
+                multiplier: m,
+                ..
+            } => {
+                state.right(m);
                 ()
             }
             // Move left
-            Token::MoveLeft => {
-                state.left();
+            &Instruction {
+                token: Token::MoveLeft,
+                multiplier: m,
+                ..
+            } => {
+                state.left(m);
                 ()
             }
             // Increase the value at the current tape position. Allow for buffer overflows!
-            Token::Increase => {
-                state.increase(1);
+            &Instruction {
+                token: Token::Increase,
+                multiplier: m,
+                ..
+            } => {
+                state.increase(m);
                 ()
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
-            Token::Decrease => {
-                state.decrease(1);
+            &Instruction {
+                token: Token::Decrease,
+                multiplier: m,
+                ..
+            } => {
+                state.decrease(m);
                 ()
             }
             // Print the `char` at the current tape position.
-            Token::Output => print!("{}", state.tape.get(state.pos).unwrap().0 as char),
+            &Instruction {
+                token: Token::Output,
+                ..
+            } => print!("{}", state.tape.get(state.pos).unwrap().0 as char),
             // We found a `[` which indicates the start of a loop
-            Token::LoopBegin(Some(lb)) => match state.tape.get(state.pos) {
+            &Instruction {
+                token: Token::LoopBegin(Some(lb)),
+                ..
+            } => match state.tape.get(state.pos) {
                 // Value at current tape is `0`, therefore we jump to the position after the
                 // matching `]`.
                 Some(&Wrapping(0)) => {
@@ -227,7 +251,10 @@ fn main() {
                 _ => {}
             },
             // We found a `]` which indicates the end of a loop
-            Token::LoopEnd(Some(le)) => {
+            &Instruction {
+                token: Token::LoopEnd(Some(le)),
+                ..
+            } => {
                 match state.tape.get(state.pos) {
                     // If the value in the tape at the current position is nonzero, we move to
                     // the matching `[`.
