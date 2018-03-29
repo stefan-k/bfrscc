@@ -9,27 +9,10 @@
 
 mod state;
 mod lexer;
+mod parser;
 use state::State;
-use lexer::{lexer, Token, TokenStream};
-
-type InstructionStream = Vec<Instruction>;
-
-#[derive(Debug, Clone)]
-struct Instruction {
-    position: usize,
-    token: Token,
-    multiplier: u8,
-}
-
-impl Instruction {
-    pub fn new(position: usize, token: Token, multiplier: u8) -> Self {
-        Instruction {
-            position,
-            token,
-            multiplier,
-        }
-    }
-}
+use lexer::{lexer, Token};
+use parser::{parser, Instruction, InstructionStream};
 
 fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
     for (idx, elem) in stream.iter().enumerate() {
@@ -38,37 +21,6 @@ fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<us
         }
     }
     None
-}
-
-fn parser(prog: TokenStream) -> InstructionStream {
-    // get rid of everything that is not an instruction
-    let mut p: TokenStream = prog.into_iter()
-        .filter(|&(_, ref x)| *x != Token::Comment)
-        .collect();
-
-    // Deal with the loops
-    let p2 = p.clone();
-    let loops = p2.into_iter().filter(|&(_, ref x)| match *x {
-        Token::LoopBegin(_) => true,
-        Token::LoopEnd(_) => true,
-        _ => false,
-    });
-    let mut stack = vec![];
-    for (idx, instr) in loops {
-        match instr {
-            Token::LoopBegin(_) => stack.push(idx),
-            Token::LoopEnd(_) => {
-                let tmp = stack.pop().unwrap();
-                p[tmp] = (tmp, Token::LoopBegin(Some(idx)));
-                p[idx] = (idx, Token::LoopEnd(Some(tmp)));
-            }
-            _ => unreachable!(),
-        }
-    }
-    // map to instructions
-    p.into_iter()
-        .map(|(i, x)| Instruction::new(i, x, 1))
-        .collect()
 }
 
 fn main() {
