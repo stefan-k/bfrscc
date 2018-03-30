@@ -37,8 +37,7 @@ pub fn parser(prog: TokenStream) -> InstructionStream {
     // Deal with the loops
     let p2 = p.clone();
     let loops = p2.into_iter().filter(|&(_, ref x)| match *x {
-        Token::LoopBegin(_) => true,
-        Token::LoopEnd(_) => true,
+        Token::LoopBegin(_) | Token::LoopEnd(_) => true,
         _ => false,
     });
     let mut stack = vec![];

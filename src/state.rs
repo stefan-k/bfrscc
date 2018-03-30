@@ -69,7 +69,7 @@ impl State {
     }
 
     pub fn get_val(&self) -> u8 {
-        self.tape.get(self.pos).unwrap().0
+        self.tape[self.pos].0
     }
 
     pub fn get_tape(&self) -> Tape {

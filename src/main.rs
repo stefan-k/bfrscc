@@ -7,6 +7,10 @@
 
 //! A basic, certainly not optimized, Brainfuck interpreter.
 
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
+#![warn(missing_docs)]
+
 mod state;
 mod lexer;
 mod parser;
@@ -43,9 +47,9 @@ fn main() {
     let mut idx = 0;
     loop {
         // Get the current instruction.
-        match prog.get(idx).unwrap() {
+        match prog[idx] {
             // Move right
-            &Instruction {
+            Instruction {
                 token: Token::MoveRight,
                 multiplier: m,
                 ..
@@ -53,7 +57,7 @@ fn main() {
                 state.right(m);
             }
             // Move left
-            &Instruction {
+            Instruction {
                 token: Token::MoveLeft,
                 multiplier: m,
                 ..
@@ -61,7 +65,7 @@ fn main() {
                 state.left(m);
             }
             // Increase the value at the current tape position. Allow for buffer overflows!
-            &Instruction {
+            Instruction {
                 token: Token::Increase,
                 multiplier: m,
                 ..
@@ -69,7 +73,7 @@ fn main() {
                 state.increase(m);
             }
             // Decrease the value at the current tape position. Allow for buffer overflows!
-            &Instruction {
+            Instruction {
                 token: Token::Decrease,
                 multiplier: m,
                 ..
@@ -77,12 +81,12 @@ fn main() {
                 state.decrease(m);
             }
             // Print the `char` at the current tape position.
-            &Instruction {
+            Instruction {
                 token: Token::Output,
                 ..
             } => print!("{}", state.get_val() as char),
             // We found a `[` which indicates the start of a loop
-            &Instruction {
+            Instruction {
                 token: Token::LoopBegin(Some(lb)),
                 ..
             } => {
@@ -97,7 +101,7 @@ fn main() {
                 }
             }
             // We found a `]` which indicates the end of a loop
-            &Instruction {
+            Instruction {
                 token: Token::LoopEnd(Some(le)),
                 ..
             } => {
