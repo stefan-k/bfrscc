@@ -11,12 +11,12 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 #![warn(missing_docs)]
 
-mod state;
+mod interpreter;
 mod lexer;
 mod parser;
 mod machine;
 use machine::Machine;
-use state::State;
+use interpreter::Interpreter;
 use lexer::{lexer, Token};
 use parser::{parser, Instruction, InstructionStream};
 
@@ -41,8 +41,8 @@ fn main() {
 
     // The buffer
 
-    // State holds the position of the pointer
-    let mut state = State::new();
+    // Interpreter holds the position of the pointer
+    let mut state = Interpreter::new();
 
     // length of the program.
     let plen = prog.len();

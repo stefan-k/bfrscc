@@ -5,7 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-//! # State
+//! # Interpreter
 
 use std::num::Wrapping;
 use std::collections::VecDeque;
@@ -14,19 +14,19 @@ use machine::Machine;
 type Tape = VecDeque<Wrapping<u8>>;
 
 /// Holds the state of the interpreter
-pub struct State {
+pub struct Interpreter {
     /// Current position in the buffer
     pos: usize,
     /// Tape
     tape: Tape,
 }
 
-impl State {
+impl Interpreter {
     /// Constructor
     pub fn new() -> Self {
         let mut tape = VecDeque::new();
         tape.push_back(Wrapping(0));
-        State { pos: 0, tape }
+        Interpreter { pos: 0, tape }
     }
 
     pub fn get_tape(&self) -> Tape {
@@ -34,7 +34,7 @@ impl State {
     }
 }
 
-impl Machine for State {
+impl Machine for Interpreter {
     fn left(&mut self, val: u8) -> &mut Self {
         match self.pos {
             // We are already at the beginning of the tape, so we will just push to the
@@ -88,9 +88,9 @@ impl Machine for State {
     }
 }
 
-impl Default for State {
+impl Default for Interpreter {
     /// Default
     fn default() -> Self {
-        State::new()
+        Interpreter::new()
     }
 }
