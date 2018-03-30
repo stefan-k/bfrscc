@@ -10,6 +10,23 @@
 use std::num::Wrapping;
 use std::collections::VecDeque;
 
+pub trait Machine {
+    /// Move left
+    fn left(&mut self, val: u8) -> &mut Self;
+
+    /// Move right
+    fn right(&mut self, val: u8) -> &mut Self;
+
+    /// Increase
+    fn increase(&mut self, val: u8) -> &mut Self;
+
+    /// Increase
+    fn decrease(&mut self, val: u8) -> &mut Self;
+
+    /// Get value
+    fn get_val(&self) -> u8;
+}
+
 type Tape = VecDeque<Wrapping<u8>>;
 
 /// Holds the state of the interpreter
@@ -28,7 +45,13 @@ impl State {
         State { pos: 0, tape }
     }
 
-    pub fn left(&mut self, val: u8) -> &mut Self {
+    pub fn get_tape(&self) -> Tape {
+        self.tape.clone()
+    }
+}
+
+impl Machine for State {
+    fn left(&mut self, val: u8) -> &mut Self {
         match self.pos {
             // We are already at the beginning of the tape, so we will just push to the
             // front. Decreasing `state.pos` is not necessary.
@@ -41,7 +64,7 @@ impl State {
         self
     }
 
-    pub fn right(&mut self, val: u8) -> &mut Self {
+    fn right(&mut self, val: u8) -> &mut Self {
         for _ in 0..val {
             self.pos += 1;
             match self.tape.get(self.pos) {
@@ -54,26 +77,22 @@ impl State {
         self
     }
 
-    pub fn increase(&mut self, val: u8) -> &mut Self {
+    fn increase(&mut self, val: u8) -> &mut Self {
         if let Some(elem) = self.tape.get_mut(self.pos) {
             *elem += Wrapping(val);
         };
         self
     }
 
-    pub fn decrease(&mut self, val: u8) -> &mut Self {
+    fn decrease(&mut self, val: u8) -> &mut Self {
         if let Some(elem) = self.tape.get_mut(self.pos) {
             *elem -= Wrapping(val);
         };
         self
     }
 
-    pub fn get_val(&self) -> u8 {
+    fn get_val(&self) -> u8 {
         self.tape[self.pos].0
-    }
-
-    pub fn get_tape(&self) -> Tape {
-        self.tape.clone()
     }
 }
 

@@ -14,7 +14,7 @@
 mod state;
 mod lexer;
 mod parser;
-use state::State;
+use state::{Machine, State};
 use lexer::{lexer, Token};
 use parser::{parser, Instruction, InstructionStream};
 
