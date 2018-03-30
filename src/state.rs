@@ -9,23 +9,7 @@
 
 use std::num::Wrapping;
 use std::collections::VecDeque;
-
-pub trait Machine {
-    /// Move left
-    fn left(&mut self, val: u8) -> &mut Self;
-
-    /// Move right
-    fn right(&mut self, val: u8) -> &mut Self;
-
-    /// Increase
-    fn increase(&mut self, val: u8) -> &mut Self;
-
-    /// Increase
-    fn decrease(&mut self, val: u8) -> &mut Self;
-
-    /// Get value
-    fn get_val(&self) -> u8;
-}
+use machine::Machine;
 
 type Tape = VecDeque<Wrapping<u8>>;
 
@@ -93,6 +77,14 @@ impl Machine for State {
 
     fn get_val(&self) -> u8 {
         self.tape[self.pos].0
+    }
+
+    fn output(&self) {
+        print!("{}", self.get_val() as char);
+    }
+
+    fn input(&mut self, val: u8) {
+        self.tape[self.pos] = Wrapping(val);
     }
 }
 

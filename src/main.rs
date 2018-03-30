@@ -14,7 +14,9 @@
 mod state;
 mod lexer;
 mod parser;
-use state::{Machine, State};
+mod machine;
+use machine::Machine;
+use state::State;
 use lexer::{lexer, Token};
 use parser::{parser, Instruction, InstructionStream};
 
@@ -84,7 +86,15 @@ fn main() {
             Instruction {
                 token: Token::Output,
                 ..
-            } => print!("{}", state.get_val() as char),
+            } => state.output(),
+            // Print the `char` at the current tape position.
+            Instruction {
+                token: Token::Input,
+                ..
+            } => {
+                // TODO
+                state.input(0);
+            }
             // We found a `[` which indicates the start of a loop
             Instruction {
                 token: Token::LoopBegin(Some(lb)),
