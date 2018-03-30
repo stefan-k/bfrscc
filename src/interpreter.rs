@@ -38,7 +38,7 @@ impl Machine for Interpreter {
     fn left(&mut self, val: u8) -> &mut Self {
         match self.pos {
             // We are already at the beginning of the tape, so we will just push to the
-            // front. Decreasing `state.pos` is not necessary.
+            // front. Decreasing `self.pos` is not necessary.
             0 => for _ in 0..val {
                 self.tape.push_front(Wrapping(0));
             },
