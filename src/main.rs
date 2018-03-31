@@ -20,6 +20,7 @@ use interpreter::Interpreter;
 use lexer::{lexer, Token};
 use parser::{parser, Instruction, InstructionStream};
 
+/// Get index of instruction within `InstructionStream`. Maybe solve this with a `HashMap`?
 fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
     for (idx, elem) in stream.iter().enumerate() {
         if elem.position == position {
@@ -35,17 +36,15 @@ fn main() {
     let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
     // let prog = "++[->+<]".as_bytes();
     let prog_lex = lexer(prog);
-    // println!("{:?}", bla);
     let prog = parser(prog_lex);
     println!("{:?}", prog);
-
-    // The buffer
 
     // Interpreter holds the position of the pointer
     let mut state = Interpreter::new();
 
     // length of the program.
     let plen = prog.len();
+
     let mut idx = 0;
     loop {
         // Get the current instruction.

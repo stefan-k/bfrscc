@@ -12,14 +12,23 @@ pub type TokenStream = Vec<(TokenPosition, Token)>;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Token {
+    /// '+'
     Increase,
+    /// '-'
     Decrease,
+    /// '<'
     MoveLeft,
+    /// '>'
     MoveRight,
+    /// '['
     LoopBegin(Option<usize>),
+    /// ']'
     LoopEnd(Option<usize>),
+    /// ','
     Input,
+    /// '.'
     Output,
+    /// anything else
     Comment,
 }
 
