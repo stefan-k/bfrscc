@@ -22,8 +22,17 @@ use interpreter::Interpreter;
 use lexer::{lexer, Token};
 use parser::{parser, Instruction, InstructionStream};
 
+fn main() {
+    // Hello World
+    // let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
+    let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+    // let prog = "++[->+<]".as_bytes();
+    // TODO: Error handling
+    run(prog);
+}
+
 /// Get index of instruction within `InstructionStream`. Maybe solve this with a `HashMap`?
-pub fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
+fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Option<usize> {
     for (idx, elem) in stream.iter().enumerate() {
         if elem.position == position {
             return Some(idx);
@@ -32,15 +41,8 @@ pub fn get_instruction_idx(stream: &InstructionStream, position: usize) -> Optio
     None
 }
 
-fn main() {
-    // Hello World
-    // let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".as_bytes();
-    let prog = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
-    // let prog = "++[->+<]".as_bytes();
-    run(prog);
-}
-
-pub fn run(prog: &str) {
+/// Run
+fn run(prog: &str) {
     let prog_lex = lexer(prog);
     let prog = parser(prog_lex);
     println!("{:?}", prog);
