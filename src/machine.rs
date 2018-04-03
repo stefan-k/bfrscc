@@ -7,6 +7,7 @@
 
 //! # Machine
 
+/// The `Machine` trait needs to be implemented by every interpreter/(cross)compiler
 pub trait Machine {
     /// Move left
     fn left(&mut self, val: u8) -> &mut Self;

@@ -9,16 +9,23 @@
 
 use lexer::{Token, TokenStream};
 
+/// A vector of `Instruction`s. This may be replace with a more complex data structure in the
+/// future.
 pub type InstructionStream = Vec<Instruction>;
 
+/// Describes a single Instruction
 #[derive(Debug, Clone)]
 pub struct Instruction {
+    /// Position of the instruction within the program
     pub position: usize,
+    /// Kind of instruction
     pub token: Token,
+    /// Indicates how often this instruction is repeated
     pub multiplier: u8,
 }
 
 impl Instruction {
+    /// Constructor
     pub fn new(position: usize, token: Token, multiplier: u8) -> Self {
         Instruction {
             position,
@@ -28,6 +35,7 @@ impl Instruction {
     }
 }
 
+/// Parses the stream of tokens.
 pub fn parser(prog: TokenStream) -> InstructionStream {
     // get rid of everything that is not an instruction
     let mut p: TokenStream = prog.into_iter()
