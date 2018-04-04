@@ -8,8 +8,11 @@
 //! # Lexer
 
 type TokenPosition = usize;
+/// This type represents a vector of tuples, where each tuple holds a token and the position of the
+/// token within a brainfuck program.
 pub type TokenStream = Vec<(TokenPosition, Token)>;
 
+/// Defines all possible Tokens allowed in a brainfuck program
 #[derive(PartialEq, Clone, Debug)]
 pub enum Token {
     /// '+'
@@ -32,6 +35,7 @@ pub enum Token {
     Comment,
 }
 
+/// The lexer takes a brainfuck program and returns a stream of tokens
 pub fn lexer(prog: &str) -> TokenStream {
     prog.chars()
         .enumerate()

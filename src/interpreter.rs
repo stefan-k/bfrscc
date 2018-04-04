@@ -11,6 +11,9 @@ use std::num::Wrapping;
 use std::collections::VecDeque;
 use machine::Machine;
 
+/// The `Tape` is a vector which can grow at the front and at the end. This allows the tape to be
+/// infinite on both sides (limited only by available memory). The type of each cell is
+/// `Wrapping<u8>` which is an `u8` which allows for overflows.
 type Tape = VecDeque<Wrapping<u8>>;
 
 /// Holds the state of the interpreter
@@ -29,6 +32,7 @@ impl Interpreter {
         Interpreter { pos: 0, tape }
     }
 
+    /// Return the current tape.
     pub fn get_tape(&self) -> Tape {
         self.tape.clone()
     }
